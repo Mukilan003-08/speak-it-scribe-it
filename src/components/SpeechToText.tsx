@@ -8,7 +8,7 @@ const SpeechToText = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   
   useEffect(() => {
     // Check if browser supports the Web Speech API
@@ -18,8 +18,8 @@ const SpeechToText = () => {
     }
     
     // Create speech recognition object
-    const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
-    recognitionRef.current = new SpeechRecognition();
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognitionAPI();
     
     // Configure recognition
     recognitionRef.current.continuous = true;
@@ -27,7 +27,7 @@ const SpeechToText = () => {
     recognitionRef.current.lang = 'en-US';
     
     // Set up event handlers
-    recognitionRef.current.onresult = (event: any) => {
+    recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
       let interim = '';
       let final = '';
       
@@ -43,7 +43,7 @@ const SpeechToText = () => {
       setInterimTranscript(interim);
     };
     
-    recognitionRef.current.onerror = (event: any) => {
+    recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Speech recognition error', event);
       if (event.error === 'not-allowed') {
         toast.error('Microphone access denied. Please allow microphone access to use speech recognition.');
@@ -57,7 +57,7 @@ const SpeechToText = () => {
       // Don't reset recording state if we want it to continue
       if (isRecording) {
         try {
-          recognitionRef.current.start();
+          recognitionRef.current?.start();
         } catch (e) {
           console.error('Error restarting recognition', e);
           setIsRecording(false);
